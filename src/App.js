@@ -1,60 +1,63 @@
 import { getAllpokemonList } from "./api/pokemon";
 import { useState, useEffect } from "react";
-import './App.css'
+import "./App.css";
 function App() {
-  const [showAddToHomeScreen, setShowAddToHomeScreen] = useState(true);
   const [pokemonData, setPokemondata] = useState([]);
-  let deferredPrompt;
   useEffect(() => {
     async function fetchData() {
       const data = await getAllpokemonList();
       setPokemondata(data?.results);
     }
-
     fetchData();
-
-
-    // Event listener for beforeinstallprompt
-    const beforeInstallPrompt = (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      // Show the button or perform any other UI update
-      document.querySelector('.add-to').style.display = 'block';
-    };
-
-    window.addEventListener('beforeinstallprompt', beforeInstallPrompt);
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', beforeInstallPrompt);
-    };
   }, []);
 
-  const addToHomeScreen = () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      deferredPrompt.userChoice.then((choiceResult) => {
-        if (choiceResult.outcome === 'accepted') {
-          console.log('User accepted the A2HS prompt');
-        } else {
-          console.log('User dismissed the A2HS prompt');
-        }
-        deferredPrompt = null;
-        // Update state to hide the button
-        setShowAddToHomeScreen(false);
+  if ("serviceWorker" in navigator && "PushManager" in window) {
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+
+      const deferredPrompt = e;
+
+      const installButton = document.createElement("button");
+      installButton.textContent = "Install App";
+      installButton.style.position = "fixed";
+      installButton.style.top = "10px";
+      installButton.style.left = "50%";
+      installButton.style.transform = "translateX(-50%)";
+      installButton.style.zIndex = "9999";
+      installButton.style.padding = "10px 20px";
+      installButton.classList.add("btn-grad");
+      installButton.style.color = "red";
+      installButton.style.border = "none";
+      installButton.style.borderRadius = "5px";
+      installButton.style.cursor = "pointer";
+
+      installButton.addEventListener("click", () => {
+        deferredPrompt.prompt();
+
+        deferredPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === "accepted") {
+            console.log("App installed");
+          } else {
+            console.log("App installation declined");
+          }
+
+          installButton.style.display = "none";
+        });
       });
-    }
-  };
-  
+
+      document.body.appendChild(installButton);
+    });
+  }
+
   return (
     <div className="App">
-      <div className="container">
+      {/* <div className="container">
         <center>
           <div className="add-to">
-            <button onClick={addToHomeScreen} style={{ display: showAddToHomeScreen ? 'block' : 'none' }} className="add-to-btn">Add to home screen</button>
+            <button  style={{ display: showAddToHomeScreen ? 'block' : 'none' }} className="add-to-btn">Add to home screen</button>
           </div>
         </center>
-      </div>
-
+      </div> */}
 
       <div
         style={{
